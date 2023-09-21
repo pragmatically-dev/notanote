@@ -1,9 +1,18 @@
-# notanote
+# Notanote
 
 NotaNote get your thinking saved on a digital whiteboard
 
 ## Preview (in progress)
-![image]
+![Image](https://github.com/pragmatically-dev/notanote/blob/master/resources/notanote.png)
+
+
+## TODO (at the moment):
+- [ ] Restructure all the code once the exploration of functionalities is finished
+- [ ] Think about an efficient state management according to the needs of the project
+- [ ] Abstract MovableBox so that other components can extend from it
+- [ ] Research about the InteractiveViewer widget
+- [ ] Create an abstraction of each movable component (Coordinates, Type of component, Characteristics, etc.)
+
 
 ## Getting Started
 

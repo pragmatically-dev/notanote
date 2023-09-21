@@ -1,6 +1,9 @@
 # notanote
 
-A new Flutter project.
+NotaNote get your thinking saved on a digital whiteboard
+
+## Preview (in progress)
+![image]
 
 ## Getting Started
 

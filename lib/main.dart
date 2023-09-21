@@ -2,62 +2,155 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: FloatingActionButton(
-            onPressed: () {
-              setState(
-                () {
-                  MovableBoxController.instance.addBox(
-                      Offset(50, 50),
-                      Colors.transparent,
-                      FittedBox(
-                        child: FlutterLogo(),
-                      ));
-                },
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
+      title: "Notanote",
+      theme: ThemeData(
+        colorSchemeSeed: const Color.fromARGB(255, 37, 37, 37),
+      ),
+      home: const WhiteBoard(),
+    );
+  }
+}
+
+class WhiteBoard extends StatefulWidget {
+  const WhiteBoard({super.key});
+
+  @override
+  State<WhiteBoard> createState() => _WhiteBoardState();
+}
+
+class _WhiteBoardState extends State<WhiteBoard> {
+  double zoom = 1;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Color.fromARGB(255, 17, 17, 17),
+        centerTitle: true,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: IconButton(onPressed: (){}, icon: Icon(Icons.settings,size: 30, )),
         ),
-        body: InteractiveViewer(
-          boundaryMargin: EdgeInsets.all(1),
-          minScale: 0.000001,
-          maxScale: 10,
-          interactionEndFrictionCoefficient: 0.03,
-          child: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              return GestureDetector(
-                onTap: () => MovableBoxController.instance.deselect(),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CustomPaint(
-                      size: Size(constraints.maxWidth, constraints.maxHeight),
-                      painter: GridPainter(),
-                    ),
-                    ...MovableBoxController.instance.boxes,
-                  ],
+        title: Text(
+          "Notanote",
+          style: GoogleFonts.poppins(fontSize: 30),
+        ),
+      ),
+      body: SafeArea(
+          child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Expanded(
+            flex: 1,
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              heightFactor: 1,
+              widthFactor: 1,
+              child: Container(
+                child: Card(
+                  color: Color.fromARGB(255, 27, 27, 27),
+                  margin: const EdgeInsets.all(5),
+
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+                  elevation: 9,
                 ),
-              );
-            },
+              ),
+            ),
           ),
+          Expanded(
+            flex: 12,
+            child: InteractiveViewer(
+              constrained: false,
+              minScale: 0.002,
+              maxScale: 200,
+              interactionEndFrictionCoefficient: 0.03,
+              child: LayoutBuilder(builder: (contextm, constraints) {
+                return Stack(
+                  fit: StackFit.loose,
+                  clipBehavior: Clip.none,
+                  children: [
+                    GestureDetector(
+                      onTap: () => MovableBoxController.instance.deselect(),
+                      child: const Grid(),
+                    ),
+                    ...MovableBoxController.instance.boxes
+                  ],
+                );
+              }),
+            ),
+          )
+        ],
+      )),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: FloatingActionButton(
+          onPressed: () {
+            setState(
+              () {
+                MovableBoxController.instance.addBox(
+                  const Offset(50, 50),
+                  Colors.transparent,
+                  const FittedBox(
+                    child: FlutterLogo(),
+                  ),
+                );
+              },
+            );
+          },
+          child: const Icon(Icons.add),
         ),
+      ),
+    );
+  }
+}
+
+class Grid extends StatelessWidget {
+  const Grid({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 6000,
+      height: 6000,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CustomPaint(
+            isComplex: true,
+            size: Size(6000, 6000),
+            painter: GridPainter(gridSpacing: 80, strokeWidth: 0.4),
+          ),
+          CustomPaint(
+            isComplex: true,
+            size: Size(6000, 6000),
+            painter: GridPainter(gridSpacing: 20, strokeWidth: 0.2),
+          ),
+          CustomPaint(
+            isComplex: true,
+            size: Size(12000, 12000),
+            painter: GridPainter(gridSpacing: 10, strokeWidth: 0.1),
+          ),
+          CustomPaint(
+            isComplex: true,
+            size: Size(24000, 24000),
+            painter: GridPainter(gridSpacing: 5, strokeWidth: 0.1),
+          ),
+        ],
       ),
     );
   }
@@ -104,8 +197,8 @@ class MovableBox extends StatefulWidget {
 
 class _MovableBoxState extends State<MovableBox> {
   Offset position = Offset.zero;
-  double width = 100.0;
-  double height = 100.0;
+  double width = 150.0;
+  double height = 150.0;
 
   bool selected = false;
 
@@ -124,6 +217,7 @@ class _MovableBoxState extends State<MovableBox> {
       top: position.dy,
       child: GestureDetector(
         onSecondaryTapDown: (details) => select(),
+        onDoubleTap: () => deselect(),
         onPanUpdate: (details) {
           if (selected) {
             setState(() {
@@ -136,17 +230,14 @@ class _MovableBoxState extends State<MovableBox> {
             });
           }
         },
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: 10, minWidth: 10),
-          child: Transform.scale(
-            child: Container(
-              width: width,
-              height: height,
-              color: selected ? widget.color.withOpacity(0.2) : widget.color,
-              child: widget.child,
-            ),
-            scaleX: width * 0.008,
-            scaleY: height * 0.008,
+        child: Transform.scale(
+          scaleX: width * 0.008,
+          scaleY: height * 0.008,
+          child: Container(
+            width: width,
+            height: height,
+            color: selected ? widget.color.withOpacity(0.2) : widget.color,
+            child: widget.child,
           ),
         ),
       ),
@@ -155,13 +246,14 @@ class _MovableBoxState extends State<MovableBox> {
 }
 
 class GridPainter extends CustomPainter {
+  double gridSpacing = 20;
+  double strokeWidth = 0.5;
+  GridPainter({required this.gridSpacing, required this.strokeWidth});
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.grey.withOpacity(0.5)
-      ..strokeWidth = 0.5;
-
-    final double gridSpacing = 20.0;
+      ..color = Colors.black.withOpacity(0.9)
+      ..strokeWidth = strokeWidth;
 
     for (int i = 0; i <= size.width / gridSpacing; i++) {
       canvas.drawLine(
@@ -181,5 +273,5 @@ class GridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -14,6 +14,17 @@ NotaNote get your thinking saved on a digital whiteboard
 - [ ] Create an abstraction of each movable component (Coordinates, Type of component, Characteristics, etc.)
 
 
+## Libs to look at
+- https://pub.dev/packages/pasteboard
+- https://pub.dev/packages/drift
+- https://pub.dev/packages/photo_view
+- https://pub.dev/packages/go_router
+- https://pub.dev/packages/fpdart
+- https://pub.dev/packages/msix
+- https://pub.dev/packages/flutter_animate
+- https://pub.dev/packages/image_picker
+- https://pub.dev/packages/bloc_concurrency
+- https://pub.dev/packages/file_picker
 ## Getting Started
 
 This project is a starting point for a Flutter application.

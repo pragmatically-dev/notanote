@@ -28,15 +28,15 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  bloc: null
+  bloc: 
   cupertino_icons: ^1.0.2
-  equatable: null
+  equatable: 
   flame: null
   flutter:
     sdk: flutter
-  flutter_bloc: null
+  flutter_bloc: 
   flutter_box_transform: ^0.4.2
-  freezed: null
+  freezed: 
   google_fonts: ^6.1.0
 
 dev_dependencies:

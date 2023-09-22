@@ -1,8 +1,12 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:notanote/src/BLoC/movable_boxes.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,20 +23,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorSchemeSeed: const Color.fromARGB(255, 37, 37, 37),
       ),
-      home: const WhiteBoard(),
+      home: BlocProvider(
+        create: (context) => MovableBoxBloc(),
+        child: const WhiteBoard(),
+      ),
     );
   }
 }
 
-class WhiteBoard extends StatefulWidget {
+class WhiteBoard extends StatelessWidget {
   const WhiteBoard({super.key});
 
-  @override
-  State<WhiteBoard> createState() => _WhiteBoardState();
-}
-
-class _WhiteBoardState extends State<WhiteBoard> {
-  double zoom = 1;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,72 +43,82 @@ class _WhiteBoardState extends State<WhiteBoard> {
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(left: 10),
-          child: IconButton(onPressed: (){}, icon: Icon(Icons.settings,size: 30, )),
+          child: IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Icons.settings,
+              size: 30,
+            ),
+          ),
         ),
         title: Text(
           "Notanote",
           style: GoogleFonts.poppins(fontSize: 30),
         ),
       ),
-      body: SafeArea(
-          child: Row(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Expanded(
-            flex: 1,
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              heightFactor: 1,
-              widthFactor: 1,
-              child: Container(
+      body: SafeArea(child: BlocBuilder<MovableBoxBloc, MovableBoxState>(
+          builder: (context, state) {
+        return Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(
+              flex: 1,
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                heightFactor: 1,
+                widthFactor: 1,
                 child: Card(
-                  color: Color.fromARGB(255, 27, 27, 27),
+                  color: const Color.fromARGB(255, 27, 27, 27),
                   margin: const EdgeInsets.all(5),
-
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
+                  ),
                   elevation: 9,
                 ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 12,
-            child: InteractiveViewer(
-              constrained: false,
-              minScale: 0.002,
-              maxScale: 200,
-              interactionEndFrictionCoefficient: 0.03,
-              child: LayoutBuilder(builder: (contextm, constraints) {
-                return Stack(
-                  fit: StackFit.loose,
-                  clipBehavior: Clip.none,
-                  children: [
-                    GestureDetector(
-                      onTap: () => MovableBoxController.instance.deselect(),
-                      child: const Grid(),
-                    ),
-                    ...MovableBoxController.instance.boxes
-                  ],
-                );
-              }),
-            ),
-          )
-        ],
-      )),
+            Expanded(
+              flex: 12,
+              child: InteractiveViewer(
+                constrained: false,
+                minScale: 0.002,
+                maxScale: 200,
+                interactionEndFrictionCoefficient: 0.03,
+                child: LayoutBuilder(
+                  builder: (contextm, constraints) {
+                    return Stack(
+                      fit: StackFit.loose,
+                      clipBehavior: Clip.none,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            BlocProvider.of<MovableBoxBloc>(context).add(
+                              DeselectBox(),
+                            );
+                          },
+                          child: const Grid(),
+                        ),
+                        //adding boxes from state
+                        ...state.boxes
+                      ],
+                    );
+                  },
+                ),
+              ),
+            )
+          ],
+        );
+      })),
       floatingActionButton: Padding(
         padding: const EdgeInsets.all(8.0),
         child: FloatingActionButton(
           onPressed: () {
-            setState(
-              () {
-                MovableBoxController.instance.addBox(
-                  const Offset(50, 50),
-                  Colors.transparent,
-                  const FittedBox(
-                    child: FlutterLogo(),
-                  ),
-                );
-              },
+            BlocProvider.of<MovableBoxBloc>(context).add(
+              AddBox(
+                Offset(100, 100),
+                Colors.transparent,
+                FlutterLogo(),
+              ),
             );
           },
           child: const Icon(Icons.add),
@@ -156,32 +167,6 @@ class Grid extends StatelessWidget {
   }
 }
 
-class MovableBoxController extends ChangeNotifier {
-  static final instance = MovableBoxController();
-
-  List<MovableBox> boxes = [];
-
-  void addBox(Offset position, Color color, Widget child) {
-    boxes.add(MovableBox(position, color, child));
-    notifyListeners();
-  }
-
-  void select(MovableBox box) {
-    for (var box in boxes) {
-      box.state.deselect();
-    }
-    box.state.select();
-    notifyListeners();
-  }
-
-  void deselect() {
-    for (var box in boxes) {
-      box.state.deselect();
-    }
-    notifyListeners();
-  }
-}
-
 class MovableBox extends StatefulWidget {
   final Offset initialPosition;
   final Color color;
@@ -212,33 +197,94 @@ class _MovableBoxState extends State<MovableBox> {
 
   @override
   Widget build(BuildContext context) {
+    bool isBigChild =false;
+    double cornerSize = 22;
     return Positioned(
       left: position.dx,
       top: position.dy,
       child: GestureDetector(
         onSecondaryTapDown: (details) => select(),
         onDoubleTap: () => deselect(),
+        onLongPress: () => select(),
         onPanUpdate: (details) {
-          if (selected) {
-            setState(() {
-              width += details.delta.dx;
-              height += details.delta.dy;
-            });
-          } else {
+          deselect();
+          if (!selected) {
             setState(() {
               position += details.delta;
             });
           }
         },
-        child: Transform.scale(
-          scaleX: width * 0.008,
-          scaleY: height * 0.008,
-          child: Container(
-            width: width,
-            height: height,
-            color: selected ? widget.color.withOpacity(0.2) : widget.color,
-            child: widget.child,
-          ),
+        child: Stack(
+          children: [
+            Container(
+              width: width,
+              height: height,
+              color: widget.color,
+              child: LayoutBuilder(builder: (context, constraints) {
+                isBigChild = constraints.maxHeight > 350 || constraints.maxWidth > 350;
+                cornerSize = isBigChild ? 105  : 22;
+                //TODO: Think a way to resize the corners based on the InteractiveView mouse wheel scale
+                print(cornerSize);
+                return widget.child;
+              }),
+            ),
+            if (selected)
+              Positioned(
+                left: 0,
+                top: 0,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    setState(() {
+                      width -= details.delta.dx;
+                      height -= details.delta.dy;
+                    });
+                  },
+                  child: Icon(Icons.crop_square, size: cornerSize),
+                ),
+              ),
+            if (selected)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    setState(() {
+                      width += details.delta.dx;
+                      height -= details.delta.dy;
+                    });
+                  },
+                  child: Icon(Icons.crop_square, size: cornerSize),
+                ),
+              ),
+            if (selected)
+              Positioned(
+                left: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    setState(() {
+                      width -= details.delta.dx;
+                      height += details.delta.dy;
+                    });
+                  },
+                  child: Icon(Icons.crop_square, size: cornerSize),
+                ),
+              ),
+            if (selected)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    setState(() {
+                      width += details.delta.dx;
+                      height += details.delta.dy;
+                    });
+                  },
+                  child: Icon(Icons.crop_square, size: cornerSize),
+                ),
+              ),
+          ],
         ),
       ),
     );

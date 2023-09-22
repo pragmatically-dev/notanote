@@ -21,6 +21,9 @@ class SelectBox extends MovableBoxEvent {
 
 class DeselectBox extends MovableBoxEvent {}
 
+class NukeBoxes extends MovableBoxEvent{}
+
+
 // Define los estados
 class MovableBoxState {
   final List<MovableBox> boxes;
@@ -80,5 +83,13 @@ class MovableBoxBloc extends Bloc<MovableBoxEvent, MovableBoxState> {
       }).toList();
       emit(MovableBoxState(boxes: boxes, resizing: false, selectedBox: null));
     });
+
+    on<NukeBoxes> ((event, emit) {
+      state.boxes.clear();
+     emit(MovableBoxState(boxes: state.boxes, resizing: false, selectedBox: null)); 
+     emit(MovableBoxState(boxes: [], resizing: false, selectedBox: null));
+    });
+
+
   }
 }

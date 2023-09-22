@@ -1,9 +1,11 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, sort_child_properties_last, prefer_const_literals_to_create_immutables
 
-import 'dart:math';
-
+import 'dart:collection';
+import 'package:flutter/services.dart';
+import 'package:notanote/src/components/grid_painter.dart';
+import 'package:notanote/src/components/responsive_sidebar.dart';
+import 'package:notanote/src/utils/responsive_bloc/lib.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:notanote/src/BLoC/movable_boxes.dart';
@@ -23,10 +25,26 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorSchemeSeed: const Color.fromARGB(255, 37, 37, 37),
       ),
-      home: BlocProvider(
-        create: (context) => MovableBoxBloc(),
-        child: const WhiteBoard(),
-      ),
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (ctx) => MovableBoxBloc(),
+        ),
+        BlocProvider(
+          create: (ctx) => ScreenTypeBloc(mediaQuery: MediaQuery.of(context)),
+        ),
+      ],
+      child: WhiteBoard(),
     );
   }
 }
@@ -36,137 +54,118 @@ class WhiteBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Color.fromARGB(255, 17, 17, 17),
-        centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.settings,
-              size: 30,
-            ),
-          ),
-        ),
-        title: Text(
-          "Notanote",
-          style: GoogleFonts.poppins(fontSize: 30),
-        ),
-      ),
-      body: SafeArea(child: BlocBuilder<MovableBoxBloc, MovableBoxState>(
-          builder: (context, state) {
-        return Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Expanded(
-              flex: 1,
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                heightFactor: 1,
-                widthFactor: 1,
-                child: Card(
-                  color: const Color.fromARGB(255, 27, 27, 27),
-                  margin: const EdgeInsets.all(5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
+    return BlocBuilder<ScreenTypeBloc, ScreenType?>(
+      builder: (context, screenType) {
+        debugPrint(screenType.toString());
+        return LayoutBuilder(builder: (cly, screenConstraints) {
+          context
+              .read<ScreenTypeBloc>()
+              .add(ScreenTypeEvent(bc: screenConstraints));
+          return Scaffold(
+            appBar: AppBar(
+              elevation: 0,
+              backgroundColor: Color.fromARGB(255, 17, 17, 17),
+              centerTitle: true,
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.settings,
+                    size: 30,
                   ),
-                  elevation: 9,
                 ),
+              ),
+              title: Text(
+                "Notanote",
+                style: GoogleFonts.poppins(fontSize: 30),
               ),
             ),
-            Expanded(
-              flex: 12,
-              child: InteractiveViewer(
-                constrained: false,
-                minScale: 0.002,
-                maxScale: 200,
-                interactionEndFrictionCoefficient: 0.03,
-                child: LayoutBuilder(
-                  builder: (contextm, constraints) {
-                    return Stack(
-                      fit: StackFit.loose,
-                      clipBehavior: Clip.none,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            BlocProvider.of<MovableBoxBloc>(context).add(
-                              DeselectBox(),
-                            );
-                          },
-                          child: const Grid(),
-                        ),
-                        //adding boxes from state
-                        ...state.boxes
-                      ],
-                    );
-                  },
-                ),
+            body: SafeArea(child: BlocBuilder<MovableBoxBloc, MovableBoxState>(
+                builder: (context, state) {
+              return Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  screenType?.map(
+                          xxl: (ctx) => ResponsiveSidebar(
+                                key: ValueKey("Sidebar"),
+                                flex: 1,
+                                widthFactor: 1,
+                                curve: Curves.bounceOut,
+                              ),
+                          xl: (ctx) => ResponsiveSidebar(
+                              key: ValueKey("Sidebar"),
+                              flex: 1,
+                              widthFactor: 1,
+                              curve: Curves.bounceOut),
+                          lg: (ctx) => ResponsiveSidebar(
+                                key: ValueKey("Sidebar"),
+                                flex: 1,
+                                widthFactor: 1.5,
+                                curve: Curves.linear,
+                              ),
+                          md: (ctx) => ResponsiveSidebar(
+                                key: ValueKey("Sidebar"),
+                                flex: 2,
+                                widthFactor: 1,
+                                curve: Curves.linear,
+                              ),
+                          sm: (ctx) => Container()) ??
+                      Container(),
+                  Expanded(
+                    flex: 12,
+                    //TODO: IMPORTANT -> Decouple the logic from the InteractiveViewer: Create a model of the info given by the fields of the widget and a create a bloc
+                    child: InteractiveViewer(
+
+                      constrained: false,
+                      minScale: 0.002,
+                      maxScale: 200,
+                      interactionEndFrictionCoefficient: 0.03,
+                      child: LayoutBuilder(
+                        builder: (contextm, constraints) {
+                          return Stack(
+                            fit: StackFit.loose,
+                            clipBehavior: Clip.none,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  BlocProvider.of<MovableBoxBloc>(context).add(
+                                    DeselectBox(),
+                                  );
+                                },
+                                child: const Grid(key: ValueKey("Grid")),
+                              ),
+                              //adding boxes from state
+                              //TODO: Work around the logic of adding boxes to the whiteboard
+                              ...state.boxes
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                ],
+              );
+            })),
+            floatingActionButton: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: FloatingActionButton(
+                onPressed: () {
+                  BlocProvider.of<MovableBoxBloc>(context).add(
+                   NukeBoxes()
+                  );
+                },
+                child: const Icon(Icons.delete_outlined),
               ),
-            )
-          ],
-        );
-      })),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: FloatingActionButton(
-          onPressed: () {
-            BlocProvider.of<MovableBoxBloc>(context).add(
-              AddBox(
-                Offset(100, 100),
-                Colors.transparent,
-                FlutterLogo(),
-              ),
-            );
-          },
-          child: const Icon(Icons.add),
-        ),
-      ),
+            ),
+          );
+        });
+      },
     );
   }
 }
 
-class Grid extends StatelessWidget {
-  const Grid({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 6000,
-      height: 6000,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          CustomPaint(
-            isComplex: true,
-            size: Size(6000, 6000),
-            painter: GridPainter(gridSpacing: 80, strokeWidth: 0.4),
-          ),
-          CustomPaint(
-            isComplex: true,
-            size: Size(6000, 6000),
-            painter: GridPainter(gridSpacing: 20, strokeWidth: 0.2),
-          ),
-          CustomPaint(
-            isComplex: true,
-            size: Size(12000, 12000),
-            painter: GridPainter(gridSpacing: 10, strokeWidth: 0.1),
-          ),
-          CustomPaint(
-            isComplex: true,
-            size: Size(24000, 24000),
-            painter: GridPainter(gridSpacing: 5, strokeWidth: 0.1),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+//TODO: Restructure this mess [MovableBox]
 class MovableBox extends StatefulWidget {
   final Offset initialPosition;
   final Color color;
@@ -181,11 +180,25 @@ class MovableBox extends StatefulWidget {
 }
 
 class _MovableBoxState extends State<MovableBox> {
-  Offset position = Offset.zero;
+  late Offset position;
   double width = 150.0;
   double height = 150.0;
-
+  late Queue<KeyEvent> events;
   bool selected = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    this.position = widget.initialPosition;
+    ServicesBinding.instance.keyboard.addHandler(_onKey);
+  }
+
+  bool _onKey(KeyEvent event) {
+    events.add(event);
+
+    return false;
+  }
 
   void select() {
     setState(() => selected = true);
@@ -197,7 +210,7 @@ class _MovableBoxState extends State<MovableBox> {
 
   @override
   Widget build(BuildContext context) {
-    bool isBigChild =false;
+    bool isBigChild = false;
     double cornerSize = 22;
     return Positioned(
       left: position.dx,
@@ -221,8 +234,9 @@ class _MovableBoxState extends State<MovableBox> {
               height: height,
               color: widget.color,
               child: LayoutBuilder(builder: (context, constraints) {
-                isBigChild = constraints.maxHeight > 350 || constraints.maxWidth > 350;
-                cornerSize = isBigChild ? 105  : 22;
+                isBigChild =
+                    constraints.maxHeight > 350 || constraints.maxWidth > 350;
+                cornerSize = isBigChild ? 105 : 22;
                 //TODO: Think a way to resize the corners based on the InteractiveView mouse wheel scale
                 print(cornerSize);
                 return widget.child;
@@ -289,35 +303,4 @@ class _MovableBoxState extends State<MovableBox> {
       ),
     );
   }
-}
-
-class GridPainter extends CustomPainter {
-  double gridSpacing = 20;
-  double strokeWidth = 0.5;
-  GridPainter({required this.gridSpacing, required this.strokeWidth});
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black.withOpacity(0.9)
-      ..strokeWidth = strokeWidth;
-
-    for (int i = 0; i <= size.width / gridSpacing; i++) {
-      canvas.drawLine(
-        Offset(gridSpacing * i, 0),
-        Offset(gridSpacing * i, size.height),
-        paint,
-      );
-    }
-
-    for (int j = 0; j <= size.height / gridSpacing; j++) {
-      canvas.drawLine(
-        Offset(0, gridSpacing * j),
-        Offset(size.width, gridSpacing * j),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

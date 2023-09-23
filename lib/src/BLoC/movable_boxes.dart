@@ -39,7 +39,8 @@ class NukeBoxes extends MovableBoxEvent{}
 class MovableBoxState {
   final List<MovableBox> boxes;
   final bool resizing;
-  final MovableBox? selectedBox;
+  final MovableBox? selectedBox; 
+
 
   MovableBoxState({
     required this.boxes,

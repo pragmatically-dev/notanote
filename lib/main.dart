@@ -1,6 +1,9 @@
 // ignore_for_file: prefer_const_constructors, sort_child_properties_last, prefer_const_literals_to_create_immutables
 
 import 'dart:collection';
+import 'dart:math';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:notanote/src/components/grid_painter.dart';
 import 'package:notanote/src/components/responsive_sidebar.dart';
@@ -83,76 +86,85 @@ class WhiteBoard extends StatelessWidget {
             ),
             body: SafeArea(child: BlocBuilder<MovableBoxBloc, MovableBoxState>(
                 builder: (context, state) {
-              return Row(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  screenType?.map(
-                          xxl: (ctx) => ResponsiveSidebar(
+              return GestureDetector(
+                onTap: () =>
+                    BlocProvider.of<MovableBoxBloc>(context).add(DeselectBox()),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    screenType?.map(
+                            xxl: (ctx) => ResponsiveSidebar(
+                                  key: ValueKey("Sidebar"),
+                                  flex: 1,
+                                  widthFactor: 1,
+                                  curve: Curves.bounceOut,
+                                ),
+                            xl: (ctx) => ResponsiveSidebar(
                                 key: ValueKey("Sidebar"),
                                 flex: 1,
                                 widthFactor: 1,
-                                curve: Curves.bounceOut,
-                              ),
-                          xl: (ctx) => ResponsiveSidebar(
-                              key: ValueKey("Sidebar"),
-                              flex: 1,
-                              widthFactor: 1,
-                              curve: Curves.bounceOut),
-                          lg: (ctx) => ResponsiveSidebar(
-                                key: ValueKey("Sidebar"),
-                                flex: 1,
-                                widthFactor: 1.5,
-                                curve: Curves.linear,
-                              ),
-                          md: (ctx) => ResponsiveSidebar(
-                                key: ValueKey("Sidebar"),
-                                flex: 2,
-                                widthFactor: 1,
-                                curve: Curves.linear,
-                              ),
-                          sm: (ctx) => Container()) ??
-                      Container(),
-                  Expanded(
-                    flex: 12,
-                    //TODO: IMPORTANT -> Decouple the logic from the InteractiveViewer: Create a model of the info given by the fields of the widget and a create a bloc
-                    child: InteractiveViewer(
-
-                      constrained: false,
-                      minScale: 0.002,
-                      maxScale: 200,
-                      interactionEndFrictionCoefficient: 0.03,
-                      child: LayoutBuilder(
-                        builder: (contextm, constraints) {
-                          return Stack(
-                            fit: StackFit.loose,
-                            clipBehavior: Clip.none,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  BlocProvider.of<MovableBoxBloc>(context).add(
-                                    DeselectBox(),
-                                  );
-                                },
-                                child: const Grid(key: ValueKey("Grid")),
-                              ),
-                              //adding boxes from state
-                              //TODO: Work around the logic of adding boxes to the whiteboard
-                              ...state.boxes
-                            ],
-                          );
-                        },
+                                curve: Curves.bounceOut),
+                            lg: (ctx) => ResponsiveSidebar(
+                                  key: ValueKey("Sidebar"),
+                                  flex: 1,
+                                  widthFactor: 1.5,
+                                  curve: Curves.linear,
+                                ),
+                            md: (ctx) => ResponsiveSidebar(
+                                  key: ValueKey("Sidebar"),
+                                  flex: 2,
+                                  widthFactor: 1,
+                                  curve: Curves.linear,
+                                ),
+                            sm: (ctx) => Container()) ??
+                        Container(),
+                    Expanded(
+                      flex: 12,
+                      //TODO: IMPORTANT -> Decouple the logic from the InteractiveViewer: Create a model of the info given by the fields of the widget and a create a bloc
+                      child: InteractiveViewer(
+                        constrained: false,
+                        minScale: 0.002,
+                        maxScale: 200,
+                        panEnabled: true,
+                        interactionEndFrictionCoefficient: 0.03,
+                        child: LayoutBuilder(
+                          builder: (contextm, constraints) {
+                            return Stack(
+                              fit: StackFit.loose,
+                              clipBehavior: Clip.none,
+                              children: [
+                                SizedBox(
+                                  width: 6000,
+                                  height: 6000,
+                                  child: const Grid(
+                                    key: ValueKey("Grid"),
+                                  ),
+                                ),
+                                //adding boxes from state
+                                //TODO: Work around the logic of adding boxes to the whiteboard
+                                ...state.boxes,
+                                
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  )
-                ],
+                    )
+                  ],
+                ),
               );
             })),
             floatingActionButton: Padding(
               padding: const EdgeInsets.all(8.0),
               child: FloatingActionButton(
                 onPressed: () {
+                  //BlocProvider.of<MovableBoxBloc>(context).add(NukeBoxes());
                   BlocProvider.of<MovableBoxBloc>(context).add(
-                   NukeBoxes()
+                    AddBox(
+                      Offset(Random().nextDouble(), Random().nextDouble()),
+                      Colors.transparent,
+                       FlutterLogo(size: Random().nextInt(600).toDouble()),
+                    ),
                   );
                 },
                 child: const Icon(Icons.delete_outlined),
@@ -188,7 +200,6 @@ class _MovableBoxState extends State<MovableBox> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     this.position = widget.initialPosition;
     ServicesBinding.instance.keyboard.addHandler(_onKey);

@@ -21,8 +21,19 @@ class SelectBox extends MovableBoxEvent {
 
 class DeselectBox extends MovableBoxEvent {}
 
-class NukeBoxes extends MovableBoxEvent{}
+class OnDragBox extends MovableBoxEvent{
+  //DragUpdateDetails
+  //Offset
+  //TODO:Implement this event
+}
 
+class OnResizeBox extends MovableBoxEvent{
+
+//TODO:Implement this event
+}
+
+
+class NukeBoxes extends MovableBoxEvent{}
 
 // Define los estados
 class MovableBoxState {

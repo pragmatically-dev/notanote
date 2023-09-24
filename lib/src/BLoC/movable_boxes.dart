@@ -9,8 +9,8 @@ class AddBox extends MovableBoxEvent {
   final Offset position;
   final Color color;
   final Widget child;
-
-  AddBox(this.position, this.color, this.child);
+  final Key key;
+  AddBox(this.key,this.position, this.color, this.child);
 }
 
 class SelectBox extends MovableBoxEvent {
@@ -21,26 +21,29 @@ class SelectBox extends MovableBoxEvent {
 
 class DeselectBox extends MovableBoxEvent {}
 
-class OnDragBox extends MovableBoxEvent{
+class OnDragBox extends MovableBoxEvent {
   //DragUpdateDetails
   //Offset
   //TODO:Implement this event
 }
 
-class OnResizeBox extends MovableBoxEvent{
-
+class OnResizeBox extends MovableBoxEvent {
 //TODO:Implement this event
 }
 
+class NukeBoxes extends MovableBoxEvent {}
 
-class NukeBoxes extends MovableBoxEvent{}
+class DeleteBox extends MovableBoxEvent {
+  final Key key;
+
+  DeleteBox(this.key);
+}
 
 // Define los estados
 class MovableBoxState {
   final List<MovableBox> boxes;
   final bool resizing;
-  final MovableBox? selectedBox; 
-
+  final MovableBox? selectedBox;
 
   MovableBoxState({
     required this.boxes,
@@ -55,13 +58,11 @@ class MovableBoxBloc extends Bloc<MovableBoxEvent, MovableBoxState> {
       : super(
           MovableBoxState(boxes: [], resizing: false, selectedBox: null),
         ) {
-    
-    
     on<AddBox>(
       (event, emit) {
         final boxes = List<MovableBox>.from(state.boxes)
           ..add(
-            MovableBox(event.position, event.color, event.child),
+            MovableBox(event.key??ValueKey("random"), event.position, event.color, event.child),
           );
         emit(
           MovableBoxState(
@@ -77,7 +78,7 @@ class MovableBoxBloc extends Bloc<MovableBoxEvent, MovableBoxState> {
       final boxes = state.boxes.map((box) {
         if (box == event.box) {
           box.state.select();
-          box.state.selected=true;
+          box.state.selected = true;
         } else {
           box.state.deselect();
         }
@@ -90,18 +91,25 @@ class MovableBoxBloc extends Bloc<MovableBoxEvent, MovableBoxState> {
     on<DeselectBox>((event, emit) {
       final boxes = state.boxes.map((box) {
         box.state.deselect();
-        box.state.selected=false;
+        box.state.selected = false;
         return box;
       }).toList();
       emit(MovableBoxState(boxes: boxes, resizing: false, selectedBox: null));
     });
 
-    on<NukeBoxes> ((event, emit) {
+    on<NukeBoxes>((event, emit) {
       state.boxes.clear();
-     emit(MovableBoxState(boxes: state.boxes, resizing: false, selectedBox: null)); 
-     emit(MovableBoxState(boxes: [], resizing: false, selectedBox: null));
+      emit(MovableBoxState(
+          boxes: state.boxes, resizing: false, selectedBox: null));
+      emit(MovableBoxState(boxes: [], resizing: false, selectedBox: null));
     });
 
-
+    on<DeleteBox>((event, emit) {
+      final boxes = state.boxes.where((box) => (box.childKey as ValueKey).value  != (event.key as ValueKey).value).toList();
+      emit(MovableBoxState(
+          boxes: boxes,
+          resizing: state.resizing,
+          selectedBox: state.selectedBox));
+    });
   }
 }

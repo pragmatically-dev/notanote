@@ -133,17 +133,18 @@ class WhiteBoard extends StatelessWidget {
                               fit: StackFit.loose,
                               clipBehavior: Clip.none,
                               children: [
-                                SizedBox(
-                                  width: 6000,
-                                  height: 6000,
-                                  child: const Grid(
-                                    key: ValueKey("Grid"),
+                                RepaintBoundary(
+                                  child: SizedBox(
+                                    width: 6000,
+                                    height: 3000,
+                                    child: const Grid(
+                                      key: ValueKey("Grid"),
+                                    ),
                                   ),
                                 ),
                                 //adding boxes from state
                                 //TODO: Work around the logic of adding boxes to the whiteboard
                                 ...state.boxes,
-                                
                               ],
                             );
                           },
@@ -158,14 +159,7 @@ class WhiteBoard extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: FloatingActionButton(
                 onPressed: () {
-                  //BlocProvider.of<MovableBoxBloc>(context).add(NukeBoxes());
-                  BlocProvider.of<MovableBoxBloc>(context).add(
-                    AddBox(
-                      Offset(Random().nextDouble(), Random().nextDouble()),
-                      Colors.transparent,
-                       FlutterLogo(size: Random().nextInt(600).toDouble()),
-                    ),
-                  );
+                  BlocProvider.of<MovableBoxBloc>(context).add(NukeBoxes());
                 },
                 child: const Icon(Icons.delete_outlined),
               ),
@@ -182,10 +176,14 @@ class MovableBox extends StatefulWidget {
   final Offset initialPosition;
   final Color color;
   final Widget child;
+  late Key childKey;
+
   late final _MovableBoxState state;
 
-  MovableBox(this.initialPosition, this.color, this.child)
-      : state = _MovableBoxState();
+  MovableBox(this.childKey, this.initialPosition, this.color, this.child,
+      {super.key}) {
+    state = _MovableBoxState();
+  }
 
   @override
   _MovableBoxState createState() => state;
@@ -202,7 +200,7 @@ class _MovableBoxState extends State<MovableBox> {
   void initState() {
     super.initState();
     this.position = widget.initialPosition;
-    ServicesBinding.instance.keyboard.addHandler(_onKey);
+   // ServicesBinding.instance.keyboard.addHandler(_onKey);
   }
 
   bool _onKey(KeyEvent event) {

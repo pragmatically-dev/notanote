@@ -29,6 +29,11 @@ Live preview: https://notanote-dev.web.app/
 - https://pub.dev/packages/bloc_concurrency
 - https://pub.dev/packages/file_picker
 - https://pub.dev/packages/pluto_grid
+- https://pub.dev/packages/synchronized_keyboard_listener
+
+## Useful content:
+- [Improve Flutter performance](https://www.youtube.com/watch?v=KH-3tbD7NoU)
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

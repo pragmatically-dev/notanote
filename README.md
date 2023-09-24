@@ -5,7 +5,7 @@ NotaNote get your thinking saved on a digital whiteboard
 ## Preview (in progress)
 Live preview: https://notanote-dev.web.app/
 
-![Image](https://github.com/pragmatically-dev/notanote/blob/master/resources/notanote.png)
+![Image](https://github.com/pragmatically-dev/notanote/blob/master/resources/notanote1.png)
 
 
 ## TODO (at the moment):

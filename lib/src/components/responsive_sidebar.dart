@@ -70,7 +70,7 @@ class ResponsiveSidebar extends StatelessWidget {
   }
 }
 
-//TODO: Extract all the logic to a BloC
+//TODO: Extract all the logic of [ImageComponent] to a BloC
 class ImageComponent extends StatefulWidget {
   const ImageComponent({
     super.key,

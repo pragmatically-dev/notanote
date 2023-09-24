@@ -133,12 +133,15 @@ class WhiteBoard extends StatelessWidget {
                               fit: StackFit.loose,
                               clipBehavior: Clip.none,
                               children: [
-                                RepaintBoundary(
-                                  child: SizedBox(
-                                    width: 6000,
-                                    height: 3000,
-                                    child: const Grid(
-                                      key: ValueKey("Grid"),
+                                MouseRegion(
+                                  
+                                  child: RepaintBoundary(
+                                    child: SizedBox(
+                                      width: 6000,
+                                      height: 3000,
+                                      child: const Grid(
+                                        key: ValueKey("Grid"),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -225,6 +228,7 @@ class _MovableBoxState extends State<MovableBox> {
       left: position.dx,
       top: position.dy,
       child: GestureDetector(
+
         onSecondaryTapDown: (details) => select(),
         onDoubleTap: () => deselect(),
         onLongPress: () => select(),

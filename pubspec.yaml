@@ -31,7 +31,6 @@ dependencies:
   bloc: 
   cupertino_icons: ^1.0.2
   equatable: 
-  flame: null
   flutter:
     sdk: flutter
   flutter_bloc: 

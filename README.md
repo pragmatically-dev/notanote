@@ -43,6 +43,8 @@ Live preview: https://notanote-dev.web.app/
 #### Consider to use: 
 - https://pub.dev/packages/flutter_animate
 - https://pub.dev/packages/bloc_concurrency
+- https://youtu.be/OpcPZdfJbq8?si=Fjh1GQM8GJsCf5VY (custom shaders)
+- https://thebookofshaders.com/edit.php#09/grid.frag
 
 ## Useful content:
 - [Improve Flutter performance](https://www.youtube.com/watch?v=KH-3tbD7NoU)

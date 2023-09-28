@@ -39,6 +39,7 @@ Live preview: https://notanote-dev.web.app/
 ### Shortcuts handling
 - https://docs.flutter.dev/ui/interactivity/actions-and-shortcuts 
 - https://pub.dev/packages/new_keyboard_shortcuts
+- https://www.youtube.com/watch?v=VcQQ1ns_qNY (CallbackShortcuts)
 - https://pub.dev/packages/synchronized_keyboard_listener
 #### Consider to use: 
 - https://pub.dev/packages/flutter_animate
